@@ -1,14 +1,13 @@
 import express from "express";
 import cors from "cors";
-import cookieParser from "cookie-parser";
+import mongoose from "mongoose";
 import "dotenv/config";
-import connectDB from "./config/db.js";
-import { userRoutes, questionRoutes, quizAttemptRoutes } from "./routes/index.js";
+import userRoutes from "../backend/routes/user.route.js";
+import questionRoutes from "../backend/routes/question.route.js";
+import quizAttemptRoutes from "../backend/routes/quiz-attempt.route.js";
 
-const PORT = process.env.PORT || 5000;
 const app = express();
-
-app.use(cookieParser());
+app.use(express.json());
 
 const corsOptions = {
   origin: process.env.FRONTEND_URL || "http://localhost:3000",
@@ -17,27 +16,17 @@ const corsOptions = {
   credentials: true,
 };
 app.use(cors(corsOptions));
-app.use(express.json());
 
-// Routes
-app.use("/api/users", userRoutes);
-app.use("/api/questions", questionRoutes);
-app.use("/api/quiz", quizAttemptRoutes);
+const uri = process.env.MONGODB_URI;
+if (!uri) throw new Error("MONGODB_URI is not defined");
+mongoose.connect(uri).catch((err) => console.error("MongoDB connection error:", err));
 
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-const serverStarter = async () => {
-  try {
-    await connectDB();
-    app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
-    });
-  } catch (error) {
-    console.error("Failed to start the server:", error);
-    process.exit(1);
-  }
-};
+app.use("/api/users", userRoutes);
+app.use("/api/questions", questionRoutes);
+app.use("/api/quiz", quizAttemptRoutes);
 
-serverStarter();
+export default app;
