@@ -28,6 +28,10 @@ app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
+app.get('/', (_req, res) => {
+  res.send('Backend is running successfully!');
+});
+
 let routesMounted = false;
 
 async function ensureRoutes() {
@@ -53,3 +57,5 @@ export default async function handler(req: any, res: any) {
     res.status(500).json({ error: "Internal server error" });
   }
 }
+
+module.exports = app; 
