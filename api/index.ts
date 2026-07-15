@@ -2,9 +2,9 @@ import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import "dotenv/config";
-import userRoutes from "../routes/user.route";
-import questionRoutes from "../routes/question.route";
-import quizAttemptRoutes from "../routes/quiz-attempt.route";
+import userRoutes from "../routes/user.route.js";
+import questionRoutes from "../routes/question.route.js";
+import quizAttemptRoutes from "../routes/quiz-attempt.route.js";
 
 const app = express();
 app.use(express.json());
