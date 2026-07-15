@@ -2,6 +2,9 @@ import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import "dotenv/config";
+import userRoutes from "../routes/user.route";
+import questionRoutes from "../routes/question.route";
+import quizAttemptRoutes from "../routes/quiz-attempt.route";
 
 const app = express();
 app.use(express.json());
@@ -22,27 +25,8 @@ app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-let routesMounted = false;
-
-async function ensureRoutes(_req: any, _res: any, next: any) {
-  if (routesMounted) return next();
-  try {
-    const userRoutes = (await import("../routes/user.route")).default;
-    const questionRoutes = (await import("../routes/question.route")).default;
-    const quizAttemptRoutes = (await import("../routes/quiz-attempt.route")).default;
-
-    app.use("/api/users", userRoutes);
-    app.use("/api/questions", questionRoutes);
-    app.use("/api/quiz", quizAttemptRoutes);
-
-    routesMounted = true;
-    next();
-  } catch (err) {
-    console.error("Failed to mount routes:", err);
-    _res.status(500).json({ error: "Internal server error during route initialization" });
-  }
-}
-
-app.use(ensureRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/questions", questionRoutes);
+app.use("/api/quiz", quizAttemptRoutes);
 
 export default app;
