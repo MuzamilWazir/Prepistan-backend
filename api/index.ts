@@ -15,13 +15,20 @@ const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:5173",
   "https://prepistan.vercel.app",
+  "https://prepistan-73sxyckp5-muzamilwazirs-projects.vercel.app",
 ];
-if (process.env.FRONTEND_URL && !allowedOrigins.includes(process.env.FRONTEND_URL)) {
+if (
+  process.env.FRONTEND_URL &&
+  !allowedOrigins.includes(process.env.FRONTEND_URL)
+) {
   allowedOrigins.push(process.env.FRONTEND_URL);
 }
 
 const corsOptions = {
-  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+  origin: (
+    origin: string | undefined,
+    callback: (err: Error | null, allow?: boolean) => void,
+  ) => {
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
@@ -36,7 +43,9 @@ app.use(cors(corsOptions));
 
 const uri = process.env.MONGODB_URI;
 if (!uri) throw new Error("MONGODB_URI is not defined");
-mongoose.connect(uri).catch((err) => console.error("MongoDB connection error:", err));
+mongoose
+  .connect(uri)
+  .catch((err) => console.error("MongoDB connection error:", err));
 
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
