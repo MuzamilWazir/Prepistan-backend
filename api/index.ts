@@ -46,4 +46,12 @@ app.use("/api/users", userRoutes);
 app.use("/api/questions", questionRoutes);
 app.use("/api/quiz", quizAttemptRoutes);
 
+const port = process.env.PORT || 5000;
+
+if (process.env.NODE_ENV !== "production") {
+  app.listen(port, () => {
+    console.log(`Backend running on http://localhost:${port}`);
+  });
+}
+
 export default app;
