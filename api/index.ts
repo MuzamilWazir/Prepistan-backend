@@ -1,13 +1,10 @@
 import express from "express";
 import cors from "cors";
-import cookieParser from "cookie-parser";
+import mongoose from "mongoose";
 import "dotenv/config";
-import connectDB from "../config/db.js";
-import { userRoutes, questionRoutes, quizAttemptRoutes } from "../routes/index.js";
 
 const app = express();
-
-app.use(cookieParser());
+app.use(express.json());
 
 const corsOptions = {
   origin: process.env.FRONTEND_URL || "http://localhost:3000",
@@ -16,25 +13,43 @@ const corsOptions = {
   credentials: true,
 };
 app.use(cors(corsOptions));
-app.use(express.json());
 
-// Routes
-app.use("/api/users", userRoutes);
-app.use("/api/questions", questionRoutes);
-app.use("/api/quiz", quizAttemptRoutes);
+let dbReady = false;
+
+async function connectOnce() {
+  if (dbReady) return;
+  const uri = process.env.MONGODB_URI;
+  if (!uri) throw new Error("MONGODB_URI is not defined");
+  await mongoose.connect(uri);
+  dbReady = true;
+}
 
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-let isConnected = false;
+let routesMounted = false;
 
-const handler = async (req: express.Request, res: express.Response) => {
-  if (!isConnected) {
-    await connectDB();
-    isConnected = true;
+async function ensureRoutes() {
+  if (routesMounted) return;
+  await connectOnce();
+
+  const userRoutes = (await import("../routes/user.route.js")).default;
+  const questionRoutes = (await import("../routes/question.route.js")).default;
+  const quizAttemptRoutes = (await import("../routes/quiz-attempt.route.js")).default;
+
+  app.use("/api/users", userRoutes);
+  app.use("/api/questions", questionRoutes);
+  app.use("/api/quiz", quizAttemptRoutes);
+  routesMounted = true;
+}
+
+export default async function handler(req: any, res: any) {
+  try {
+    await ensureRoutes();
+    return app(req, res);
+  } catch (err) {
+    console.error("Handler error:", err);
+    res.status(500).json({ error: "Internal server error" });
   }
-  return app(req, res);
-};
-
-export default handler;
+}
