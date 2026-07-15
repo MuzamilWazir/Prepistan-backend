@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import mongoose from "mongoose";
 import "dotenv/config";
 import userRoutes from "../routes/user.route.js";
@@ -8,9 +9,25 @@ import quizAttemptRoutes from "../routes/quiz-attempt.route.js";
 
 const app = express();
 app.use(express.json());
+app.use(cookieParser());
+
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:5173",
+  "https://prepistan.vercel.app",
+];
+if (process.env.FRONTEND_URL && !allowedOrigins.includes(process.env.FRONTEND_URL)) {
+  allowedOrigins.push(process.env.FRONTEND_URL);
+}
 
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || "http://localhost:3000"  ||"https://prepistan.vercel.app/",
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   methods: "GET,POST,PUT,DELETE",
   allowedHeaders: "Content-Type,Authorization",
   credentials: true,
