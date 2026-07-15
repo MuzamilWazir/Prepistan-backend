@@ -27,9 +27,9 @@ let routesMounted = false;
 async function ensureRoutes(_req: any, _res: any, next: any) {
   if (routesMounted) return next();
   try {
-    const userRoutes = (await import("../routes/user.route.js")).default;
-    const questionRoutes = (await import("../routes/question.route.js")).default;
-    const quizAttemptRoutes = (await import("../routes/quiz-attempt.route.js")).default;
+    const userRoutes = (await import("../routes/user.route")).default;
+    const questionRoutes = (await import("../routes/question.route")).default;
+    const quizAttemptRoutes = (await import("../routes/quiz-attempt.route")).default;
 
     app.use("/api/users", userRoutes);
     app.use("/api/questions", questionRoutes);
