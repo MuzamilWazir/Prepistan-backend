@@ -201,7 +201,7 @@ export const GetAllUsers = async (req: Request, res: Response): Promise<void> =>
       return;
     }
 
-    const { page = "1", limit = "20", search = "" } = req.query as Record<string, string>;
+    const { page = "1", limit = "20", search = "", role = "" } = req.query as Record<string, string>;
     const pageNum = parseInt(page, 10);
     const limitNum = parseInt(limit, 10);
     const skip = (pageNum - 1) * limitNum;
@@ -212,6 +212,11 @@ export const GetAllUsers = async (req: Request, res: Response): Promise<void> =>
         { name: { $regex: search, $options: "i" } },
         { email: { $regex: search, $options: "i" } },
       ];
+    }
+    if (role) {
+      filter.role = role;
+    } else {
+      filter.role = { $nin: ["Admin", "Super Admin"] };
     }
 
     const [users, total] = await Promise.all([
@@ -237,8 +242,8 @@ export const UpdateUserRole = async (req: Request, res: Response): Promise<void>
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.ACCESS_SECRET!) as { email: string; role: string };
 
-    if (decoded.role !== "Super Admin") {
-      res.status(403).json({ message: "Only Super Admin can change roles" });
+    if (decoded.role !== "Super Admin" && decoded.role !== "Admin") {
+      res.status(403).json({ message: "Access denied" });
       return;
     }
 
@@ -252,6 +257,17 @@ export const UpdateUserRole = async (req: Request, res: Response): Promise<void>
     const validRoles = ["Student", "Premium Student", "Admin", "Super Admin", "Content Manager"];
     if (!validRoles.includes(role)) {
       res.status(400).json({ message: "Invalid role" });
+      return;
+    }
+
+    const targetUser = await User.findById(userId);
+    if (!targetUser) {
+      res.status(404).json({ message: "User not found" });
+      return;
+    }
+
+    if (decoded.role !== "Super Admin" && (targetUser.role === "Admin" || targetUser.role === "Super Admin")) {
+      res.status(403).json({ message: "Only Super Admin can modify admin roles" });
       return;
     }
 
@@ -287,16 +303,28 @@ export const DeleteUser = async (req: Request, res: Response): Promise<void> => 
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.ACCESS_SECRET!) as { email: string; role: string };
 
-    if (decoded.role !== "Super Admin") {
-      res.status(403).json({ message: "Only Super Admin can delete users" });
+    if (decoded.role !== "Super Admin" && decoded.role !== "Admin") {
+      res.status(403).json({ message: "Access denied" });
       return;
     }
 
-    const user = await User.findByIdAndDelete(req.params.id);
-    if (!user) {
+    const targetUser = await User.findById(req.params.id);
+    if (!targetUser) {
       res.status(404).json({ message: "User not found" });
       return;
     }
+
+    if (targetUser.email === decoded.email) {
+      res.status(400).json({ message: "Cannot delete your own account" });
+      return;
+    }
+
+    if (decoded.role !== "Super Admin" && (targetUser.role === "Admin" || targetUser.role === "Super Admin")) {
+      res.status(403).json({ message: "Only Super Admin can delete admin accounts" });
+      return;
+    }
+
+    await User.findByIdAndDelete(req.params.id);
 
     res.json({ message: "User deleted" });
   } catch (error) {
