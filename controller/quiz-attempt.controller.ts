@@ -46,7 +46,10 @@ export const SubmitQuizAttempt = async (req: Request, res: Response): Promise<vo
     let newStreak = user.streak;
     let newLongestStreak = user.longestStreak;
 
-    if (!lastActiveStart) {
+    if (user.streak === 0) {
+      // First ever quiz attempt — start streak at 1
+      newStreak = 1;
+    } else if (!lastActiveStart) {
       newStreak = 1;
     } else if (lastActiveStart.getTime() === todayStart.getTime()) {
       newStreak = user.streak;
