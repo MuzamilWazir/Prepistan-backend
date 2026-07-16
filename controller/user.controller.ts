@@ -3,11 +3,11 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { User, type IUser } from "../model/user.model.js";
 
-const generateAccessToken = (payload: { email: string; role: string }): string => {
+const generateAccessToken = (payload: { userId: string; email: string; role: string }): string => {
   return jwt.sign(payload, process.env.ACCESS_SECRET!, { expiresIn: "15m" });
 };
 
-const generateRefreshToken = (payload: { email: string; role: string }): string => {
+const generateRefreshToken = (payload: { userId: string; email: string; role: string }): string => {
   return jwt.sign(payload, process.env.REFRESH_SECRET!, { expiresIn: "7d" });
 };
 
@@ -77,8 +77,8 @@ export const LoginUser = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const accessToken = generateAccessToken({ email: user.email, role: user.role });
-    const refreshToken = jwt.sign({ email: user.email, role: user.role }, process.env.REFRESH_SECRET!, { expiresIn: "7d" });
+    const accessToken = generateAccessToken({ userId: user._id.toString(), email: user.email, role: user.role });
+    const refreshToken = jwt.sign({ userId: user._id.toString(), email: user.email, role: user.role }, process.env.REFRESH_SECRET!, { expiresIn: "7d" });
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
@@ -121,8 +121,8 @@ export const AdminLogin = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
-    const accessToken = generateAccessToken({ email: user.email, role: user.role });
-    const refreshToken = jwt.sign({ email: user.email, role: user.role }, process.env.REFRESH_SECRET!, { expiresIn: "7d" });
+    const accessToken = generateAccessToken({ userId: user._id.toString(), email: user.email, role: user.role });
+    const refreshToken = jwt.sign({ userId: user._id.toString(), email: user.email, role: user.role }, process.env.REFRESH_SECRET!, { expiresIn: "7d" });
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
@@ -147,8 +147,8 @@ export const RefreshToken = (req: Request, res: Response): void => {
   }
 
   try {
-    const decoded = jwt.verify(cookies.refreshToken, process.env.REFRESH_SECRET!) as { email: string; role: string };
-    const accessToken = generateAccessToken({ email: decoded.email, role: decoded.role });
+    const decoded = jwt.verify(cookies.refreshToken, process.env.REFRESH_SECRET!) as { userId: string; email: string; role: string };
+    const accessToken = generateAccessToken({ userId: decoded.userId, email: decoded.email, role: decoded.role });
     res.json({ accessToken });
   } catch {
     res.status(403).json({ message: "Invalid or expired refresh token" });
@@ -344,8 +344,8 @@ export const GoogleCallback = (req: Request, res: Response): void => {
       return;
     }
 
-    const accessToken = generateAccessToken({ email: user.email, role: user.role });
-    const refreshToken = generateRefreshToken({ email: user.email, role: user.role });
+    const accessToken = generateAccessToken({ userId: user._id.toString(), email: user.email, role: user.role });
+    const refreshToken = generateRefreshToken({ userId: user._id.toString(), email: user.email, role: user.role });
 
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
     const userData = encodeURIComponent(
