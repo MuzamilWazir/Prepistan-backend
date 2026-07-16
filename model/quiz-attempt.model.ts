@@ -1,9 +1,4 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
-import { Request } from "express";
-
-export interface AuthRequest extends Request {
-  user?: { userId: string; email: string };
-}
 
 export type QuizMode =
   | "Practice Mode"

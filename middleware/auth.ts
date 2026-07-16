@@ -2,14 +2,16 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
 export interface AuthPayload {
+  userId?: string;
   email: string;
+  role?: string;
 }
 
 export interface AuthRequest extends Request {
   user?: AuthPayload;
 }
 
-export const Auth = (req: AuthRequest, res: Response, next: NextFunction): void => {
+export const Auth = (req: Request, res: Response, next: NextFunction): void => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -26,7 +28,7 @@ export const Auth = (req: AuthRequest, res: Response, next: NextFunction): void 
 
   try {
     const decoded = jwt.verify(token, process.env.ACCESS_SECRET!) as AuthPayload;
-    req.user = decoded;
+    (req as AuthRequest).user = decoded;
     next();
   } catch {
     res.status(403).json({ message: "Invalid or expired token" });
@@ -34,8 +36,9 @@ export const Auth = (req: AuthRequest, res: Response, next: NextFunction): void 
 };
 
 export const Authorize = (roles: string[]) => {
-  return (req: AuthRequest, res: Response, next: NextFunction): void => {
-    if (!req.user) {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    const user = (req as AuthRequest).user;
+    if (!user) {
       res.status(401).json({ message: "Not authenticated" });
       return;
     }

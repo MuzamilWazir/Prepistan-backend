@@ -1,10 +1,11 @@
-import { Response } from "express";
-import { QuizAttempt, type AuthRequest } from "../model/quiz-attempt.model.js";
+import { Request, Response } from "express";
+import { QuizAttempt } from "../model/quiz-attempt.model.js";
 import { User } from "../model/user.model.js";
+import type { AuthRequest } from "../middleware/auth.js";
 
-export const SubmitQuizAttempt = async (req: AuthRequest, res: Response): Promise<void> => {
+export const SubmitQuizAttempt = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = req.user?.userId;
+    const userId = (req as AuthRequest).user?.userId;
     if (!userId) {
       res.status(401).json({ message: "Not authenticated" });
       return;
@@ -83,9 +84,9 @@ export const SubmitQuizAttempt = async (req: AuthRequest, res: Response): Promis
   }
 };
 
-export const GetUserQuizHistory = async (req: AuthRequest, res: Response): Promise<void> => {
+export const GetUserQuizHistory = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = req.user?.userId;
+    const userId = (req as AuthRequest).user?.userId;
     if (!userId) {
       res.status(401).json({ message: "Not authenticated" });
       return;
@@ -99,7 +100,7 @@ export const GetUserQuizHistory = async (req: AuthRequest, res: Response): Promi
   }
 };
 
-export const GetLeaderboard = async (_req: AuthRequest, res: Response): Promise<void> => {
+export const GetLeaderboard = async (_req: Request, res: Response): Promise<void> => {
   try {
     const leaderboard = await User.find({})
       .sort({ xp: -1 })
