@@ -4,12 +4,12 @@ import {
   GetUserQuizHistory,
   GetLeaderboard,
 } from "../controller/quiz-attempt.controller.js";
-import { Auth } from "../middleware/auth.js";
+import { requireAuth } from "../middleware/auth.js";
 
 const router = Router();
 
-router.post("/submit", Auth, SubmitQuizAttempt);
-router.get("/history", Auth, GetUserQuizHistory);
+router.post("/submit", requireAuth, SubmitQuizAttempt);
+router.get("/history", requireAuth, GetUserQuizHistory);
 router.get("/leaderboard", GetLeaderboard);
 
 export default router;

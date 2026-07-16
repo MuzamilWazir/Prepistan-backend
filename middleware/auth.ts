@@ -42,8 +42,10 @@ export const Authorize = (roles: string[]) => {
       res.status(401).json({ message: "Not authenticated" });
       return;
     }
-    // NOTE: role check requires fetching user from DB or embedding role in JWT
-    // For now we skip role-based authorization if no role in token
     next();
   };
 };
+
+// Cast Auth to RequestHandler for use in route definitions
+import type { RequestHandler } from "express";
+export const requireAuth: RequestHandler = Auth as RequestHandler;

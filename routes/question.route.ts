@@ -8,7 +8,7 @@ import {
   GetCategories,
   GetSubjects,
 } from "../controller/question.controller.js";
-import { Auth } from "../middleware/auth.js";
+import { requireAuth } from "../middleware/auth.js";
 
 const router = Router();
 
@@ -16,8 +16,8 @@ router.get("/", GetQuestions);
 router.get("/categories", GetCategories);
 router.get("/subjects", GetSubjects);
 router.get("/:id", GetQuestionById);
-router.post("/", Auth, CreateQuestion);
-router.put("/:id", Auth, UpdateQuestion);
-router.delete("/:id", Auth, DeleteQuestion);
+router.post("/", requireAuth, CreateQuestion);
+router.put("/:id", requireAuth, UpdateQuestion);
+router.delete("/:id", requireAuth, DeleteQuestion);
 
 export default router;
