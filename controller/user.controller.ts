@@ -7,6 +7,10 @@ const generateAccessToken = (payload: { email: string; role: string }): string =
   return jwt.sign(payload, process.env.ACCESS_SECRET!, { expiresIn: "15m" });
 };
 
+const generateRefreshToken = (payload: { email: string; role: string }): string => {
+  return jwt.sign(payload, process.env.REFRESH_SECRET!, { expiresIn: "7d" });
+};
+
 export const RegisterUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const { name, email, password } = req.body as {
@@ -298,5 +302,38 @@ export const DeleteUser = async (req: Request, res: Response): Promise<void> => 
   } catch (error) {
     console.error("Error deleting user:", error);
     res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// ── Google OAuth Callback ──
+
+export const GoogleCallback = (req: Request, res: Response): void => {
+  try {
+    const user = req.user as any;
+    if (!user) {
+      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+      res.redirect(`${frontendUrl}/login?error=auth_failed`);
+      return;
+    }
+
+    const accessToken = generateAccessToken({ email: user.email, role: user.role });
+    const refreshToken = generateRefreshToken({ email: user.email, role: user.role });
+
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+    const userData = encodeURIComponent(
+      JSON.stringify({
+        name: user.name,
+        email: user.email,
+        provider: user.provider,
+      })
+    );
+
+    res.redirect(
+      `${frontendUrl}/dashboard?token=${accessToken}&refresh=${refreshToken}&user=${userData}`
+    );
+  } catch (error) {
+    console.error("Error in Google callback:", error);
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+    res.redirect(`${frontendUrl}/login?error=auth_failed`);
   }
 };

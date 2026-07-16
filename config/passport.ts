@@ -1,4 +1,5 @@
 import passport from "passport";
+import { Strategy as LocalStrategy } from "passport-local";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import bcrypt from "bcrypt";
 import { User } from "../model/user.model.js";
@@ -20,7 +21,7 @@ export function configurePassport() {
   // ── Local Strategy (email/password) ──
   passport.use(
     "local-login",
-    new (await import("passport-local")).Strategy(
+    new LocalStrategy(
       { usernameField: "email", passwordField: "password" },
       async (email: string, password: string, done) => {
         try {
@@ -39,14 +40,12 @@ export function configurePassport() {
   );
 
   // ── Google OAuth Strategy ──
-  const callbackURL = process.env.GOOGLE_CALLBACK_URL || "http://localhost:3000/dashboard";
-
   passport.use(
     new GoogleStrategy(
       {
         clientID: process.env.GOOGLE_CLIENT_ID!,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-        callbackURL: "/api/auth/google/callback",
+        callbackURL: "/api/users/auth/google/callback",
         proxy: true,
       },
       async (_accessToken: string, _refreshToken: string, profile: any, done: any) => {
@@ -57,14 +56,12 @@ export function configurePassport() {
           let user = await User.findOne({ email: email.toLowerCase() });
 
           if (user) {
-            // Update provider if it was Email
             if (user.provider === "Email") {
               user.provider = "Google";
               user.avatarUrl = user.avatarUrl || profile.photos?.[0]?.value || "";
               await user.save();
             }
           } else {
-            // Create new user from Google profile
             const randomPassword = await bcrypt.hash(Math.random().toString(36).slice(-16), 10);
             user = new User({
               name: profile.displayName || email.split("@")[0],

@@ -2,7 +2,9 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import mongoose from "mongoose";
+import passport from "passport";
 import "dotenv/config";
+import { configurePassport } from "../config/passport.js";
 import userRoutes from "../routes/user.route.js";
 import questionRoutes from "../routes/question.route.js";
 import quizAttemptRoutes from "../routes/quiz-attempt.route.js";
@@ -10,6 +12,10 @@ import quizAttemptRoutes from "../routes/quiz-attempt.route.js";
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
+
+// ── Initialize Passport ──
+configurePassport();
+app.use(passport.initialize());
 
 const allowedOrigins = [
   "http://localhost:3000",

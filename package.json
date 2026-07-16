@@ -33,6 +33,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^26.1.1",
     "@types/passport-google-oauth20": "^2.0.17",
+    "@types/passport-local": "^1.0.38",
     "ts-node": "^10.9.2",
     "tsx": "^4.23.1",
     "typescript": "^5.9.3"
